@@ -16,7 +16,7 @@ def test_send_message_returns_response_text():
     ]
 
     history = []
-    result = send_message(mock_client, "system prompt", history, "Hello!")
+    result = send_message(mock_client, "system prompt", history, "Hello!", stream=False)
 
     assert result == "Hey there! Welcome to the stream."
     assert len(history) == 2  # user message + assistant response
@@ -34,7 +34,7 @@ def test_send_message_preserves_history():
         {"role": "user", "content": "First message"},
         {"role": "assistant", "content": "First response"},
     ]
-    result = send_message(mock_client, "system prompt", history, "Second message")
+    result = send_message(mock_client, "system prompt", history, "Second message", stream=False)
 
     assert result == "Response 1"
     assert len(history) == 4
@@ -49,7 +49,7 @@ def test_send_message_passes_system_prompt():
     ]
 
     history = []
-    send_message(mock_client, "test system prompt", history, "hi")
+    send_message(mock_client, "test system prompt", history, "hi", stream=False)
 
     call_args = mock_client.messages.create.call_args
     assert call_args.kwargs["system"] == "test system prompt"

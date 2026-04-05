@@ -21,21 +21,39 @@ def send_message(
     system_prompt: str,
     history: list[dict],
     user_input: str,
+    stream: bool = True,
 ) -> str:
     """Send a message to Claude and return the response text.
 
     Appends both the user message and assistant response to history.
+    When stream=True, prints tokens as they arrive.
     """
     history.append({"role": "user", "content": user_input})
 
-    response = client.messages.create(
-        model=MODEL,
-        max_tokens=MAX_TOKENS,
-        system=system_prompt,
-        messages=history,
-    )
+    if stream:
+        collected = []
+        print()
+        print("KtulueBot: ", end="", flush=True)
+        with client.messages.stream(
+            model=MODEL,
+            max_tokens=MAX_TOKENS,
+            system=system_prompt,
+            messages=history,
+        ) as response:
+            for text in response.text_stream:
+                print(text, end="", flush=True)
+                collected.append(text)
+        print()
+        assistant_text = "".join(collected)
+    else:
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=MAX_TOKENS,
+            system=system_prompt,
+            messages=history,
+        )
+        assistant_text = response.content[0].text
 
-    assistant_text = response.content[0].text
     history.append({"role": "assistant", "content": assistant_text})
     return assistant_text
 
@@ -62,9 +80,7 @@ def main():
                 print("KtulueBot: Stay hydrated out there! Catch me live on Twitch. Peace! ✌️")
                 break
 
-            response = send_message(client, system_prompt, history, user_input)
-            print()
-            print(f"KtulueBot: {response}")
+            send_message(client, system_prompt, history, user_input)
             print()
 
     except KeyboardInterrupt:
