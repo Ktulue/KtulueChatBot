@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh pr create --title 'docs: office-hours validation for KtulueChatBot' --body ':*)",
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(grep -l \"Ktulue\" knowledge/*.md)",
+      "Bash(pytest tests/test_deflections.py -v)",
+      "Bash(pytest:*)",
+      "Bash(git commit:*)",
+      "Bash(gh pr create --title 'feat: Session 1 personality-first CLI chatbot' --body ':*)"
+    ]
+  }
+}
