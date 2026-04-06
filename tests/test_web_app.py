@@ -108,6 +108,9 @@ def test_chat_missing_message_returns_422(web_client):
         json={"session_id": "v-1"},
     )
     assert response.status_code == 422
+    body = response.json()
+    assert "detail" in body
+    assert any("message" in str(error["loc"]) for error in body["detail"])
 
 
 def test_chat_missing_session_id_returns_422(web_client):
@@ -116,6 +119,9 @@ def test_chat_missing_session_id_returns_422(web_client):
         json={"message": "hi"},
     )
     assert response.status_code == 422
+    body = response.json()
+    assert "detail" in body
+    assert any("session_id" in str(error["loc"]) for error in body["detail"])
 
 
 def test_chat_empty_message_returns_422(web_client):
@@ -124,6 +130,9 @@ def test_chat_empty_message_returns_422(web_client):
         json={"session_id": "v-2", "message": ""},
     )
     assert response.status_code == 422
+    body = response.json()
+    assert "detail" in body
+    assert any("message" in str(error["loc"]) for error in body["detail"])
 
 
 def test_chat_empty_session_id_returns_422(web_client):
@@ -132,3 +141,6 @@ def test_chat_empty_session_id_returns_422(web_client):
         json={"session_id": "", "message": "hi"},
     )
     assert response.status_code == 422
+    body = response.json()
+    assert "detail" in body
+    assert any("session_id" in str(error["loc"]) for error in body["detail"])
