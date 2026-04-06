@@ -40,4 +40,6 @@ def web_client(web_app):
     """A FastAPI TestClient bound to the configured web app."""
     from fastapi.testclient import TestClient
 
-    return TestClient(web_app)
+    client = TestClient(web_app)
+    yield client
+    client.close()
