@@ -144,3 +144,69 @@ def test_chat_empty_session_id_returns_422(web_client):
     body = response.json()
     assert "detail" in body
     assert any("session_id" in str(error["loc"]) for error in body["detail"])
+
+
+def test_chat_error_returns_friendly_message(web_client):
+    def raise_error(history):
+        # Generators must yield at least once before raising in a way that
+        # the StreamingResponse can observe — but raising on first iteration
+        # is the realistic Anthropic-error case.
+        if False:
+            yield ""
+        raise RuntimeError("simulated Anthropic API failure")
+
+    with patch("web.app.stream_claude_tokens", side_effect=raise_error):
+        response = web_client.post(
+            "/api/chat",
+            json={"session_id": "err-1", "message": "trigger fail"},
+        )
+
+    assert response.status_code == 200
+    body = response.text
+    # Friendly error must appear in the SSE stream as a data event
+    assert '"type": "error"' in body
+    # Real exception text must NOT appear
+    assert "simulated Anthropic API failure" not in body
+    assert "RuntimeError" not in body
+
+
+def test_chat_error_rolls_back_user_message(web_client):
+    from web.app import sessions
+
+    def raise_error(history):
+        if False:
+            yield ""
+        raise RuntimeError("boom")
+
+    with patch("web.app.stream_claude_tokens", side_effect=raise_error):
+        web_client.post(
+            "/api/chat",
+            json={"session_id": "rollback-1", "message": "this should be rolled back"},
+        )
+
+    # The user message that triggered the failure must not remain in history
+    history = sessions.get("rollback-1", [])
+    assert all(
+        entry["content"] != "this should be rolled back" for entry in history
+    ), f"Expected rollback, but history is {history}"
+
+
+def test_chat_error_logs_at_error_level(web_client, caplog):
+    import logging
+
+    def raise_error(history):
+        if False:
+            yield ""
+        raise RuntimeError("kaboom")
+
+    with caplog.at_level(logging.ERROR, logger="ktulue.web"):
+        with patch("web.app.stream_claude_tokens", side_effect=raise_error):
+            web_client.post(
+                "/api/chat",
+                json={"session_id": "log-err-1", "message": "fail me"},
+            )
+
+    error_records = [r for r in caplog.records if r.levelno == logging.ERROR]
+    assert len(error_records) >= 1
+    # Session ID should appear somewhere in the error record for correlation
+    assert any("log-err-1" in r.getMessage() for r in error_records)

@@ -101,12 +101,20 @@ async def chat(req: ChatRequest):
 
     def event_generator():
         collected: list[str] = []
-        for token in stream_claude_tokens(history):
-            collected.append(token)
-            yield _sse_event("token", token)
+        try:
+            for token in stream_claude_tokens(history):
+                collected.append(token)
+                yield _sse_event("token", token)
 
-        full_response = "".join(collected)
-        history.append({"role": "assistant", "content": full_response})
-        logger.info("[%s] bot: %s", session_id, full_response)
+            full_response = "".join(collected)
+            history.append({"role": "assistant", "content": full_response})
+            logger.info("[%s] bot: %s", session_id, full_response)
+        except Exception:
+            # Roll back: remove the user message we appended above so the
+            # broken turn does not poison future requests in this session.
+            if history and history[-1].get("role") == "user":
+                history.pop()
+            logger.exception("[%s] chat stream failed", session_id)
+            yield _sse_event("error", pick_friendly_error())
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")

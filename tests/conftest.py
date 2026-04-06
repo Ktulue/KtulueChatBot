@@ -32,6 +32,8 @@ def web_app(mock_anthropic_client):
 
     yield web_app_module.app
 
+    web_app_module.state["system_prompt"] = None
+    web_app_module.state["client"] = None
     web_app_module.sessions.clear()
 
 
