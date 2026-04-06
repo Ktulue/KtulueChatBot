@@ -1,4 +1,5 @@
 """Tests for the FastAPI web layer."""
+from unittest.mock import patch
 
 
 def test_root_returns_html(web_client):
@@ -23,9 +24,6 @@ def test_static_chat_js_served(web_client):
     response = web_client.get("/static/chat.js")
     assert response.status_code == 200
     # Browsers accept several MIME types for JS; just verify it loads.
-
-
-from unittest.mock import patch
 
 
 def test_chat_endpoint_streams_tokens(web_client):
@@ -60,3 +58,45 @@ def test_chat_endpoint_records_user_and_assistant_history(web_client):
     assert len(history) == 2
     assert history[0] == {"role": "user", "content": "hello"}
     assert history[1] == {"role": "assistant", "content": "Hi there"}
+
+
+def test_same_session_id_builds_multi_turn_history(web_client):
+    from web.app import sessions
+
+    with patch("web.app.stream_claude_tokens", return_value=iter(["A1"])):
+        web_client.post(
+            "/api/chat",
+            json={"session_id": "multi-1", "message": "first"},
+        )
+    with patch("web.app.stream_claude_tokens", return_value=iter(["A2"])):
+        web_client.post(
+            "/api/chat",
+            json={"session_id": "multi-1", "message": "second"},
+        )
+
+    history = sessions["multi-1"]
+    assert len(history) == 4
+    assert history[0]["content"] == "first"
+    assert history[1]["content"] == "A1"
+    assert history[2]["content"] == "second"
+    assert history[3]["content"] == "A2"
+
+
+def test_different_session_ids_have_isolated_histories(web_client):
+    from web.app import sessions
+
+    with patch("web.app.stream_claude_tokens", return_value=iter(["X"])):
+        web_client.post(
+            "/api/chat",
+            json={"session_id": "iso-A", "message": "hello A"},
+        )
+    with patch("web.app.stream_claude_tokens", return_value=iter(["Y"])):
+        web_client.post(
+            "/api/chat",
+            json={"session_id": "iso-B", "message": "hello B"},
+        )
+
+    assert len(sessions["iso-A"]) == 2
+    assert len(sessions["iso-B"]) == 2
+    assert sessions["iso-A"][0]["content"] == "hello A"
+    assert sessions["iso-B"][0]["content"] == "hello B"
