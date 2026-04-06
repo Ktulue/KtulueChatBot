@@ -100,3 +100,35 @@ def test_different_session_ids_have_isolated_histories(web_client):
     assert len(sessions["iso-B"]) == 2
     assert sessions["iso-A"][0]["content"] == "hello A"
     assert sessions["iso-B"][0]["content"] == "hello B"
+
+
+def test_chat_missing_message_returns_422(web_client):
+    response = web_client.post(
+        "/api/chat",
+        json={"session_id": "v-1"},
+    )
+    assert response.status_code == 422
+
+
+def test_chat_missing_session_id_returns_422(web_client):
+    response = web_client.post(
+        "/api/chat",
+        json={"message": "hi"},
+    )
+    assert response.status_code == 422
+
+
+def test_chat_empty_message_returns_422(web_client):
+    response = web_client.post(
+        "/api/chat",
+        json={"session_id": "v-2", "message": ""},
+    )
+    assert response.status_code == 422
+
+
+def test_chat_empty_session_id_returns_422(web_client):
+    response = web_client.post(
+        "/api/chat",
+        json={"session_id": "", "message": "hi"},
+    )
+    assert response.status_code == 422
