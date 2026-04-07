@@ -125,8 +125,9 @@
                     if (botBubble) {
                         botBubble.remove();
                         botBubble = null;
+                    } else {
+                        typingBubble.remove();
                     }
-                    typingBubble.remove();
                     appendMessage("bot", evt.text);
                 }
             });
