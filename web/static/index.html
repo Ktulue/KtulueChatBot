@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KtulueBot — Chat with The Water Father</title>
+    <meta name="description" content="Chat with KtulueBot — Josh, The Water Father, in bot form.">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="chat-container">
+        <header class="chat-header">
+            <img src="/static/logo.png" alt="Ktulue Logo" class="chat-logo">
+            <h1>KTULUEBOT</h1>
+            <p class="chat-tagline">Chat with The Water Father</p>
+        </header>
+
+        <main id="chat-messages" class="chat-messages" aria-live="polite">
+            <!-- Messages get appended here by chat.js -->
+        </main>
+
+        <form id="chat-form" class="chat-input-area" autocomplete="off">
+            <input
+                id="chat-input"
+                type="text"
+                placeholder="Ask me anything... or just say hi."
+                aria-label="Chat message"
+                required
+            >
+            <button id="chat-send" type="submit">Send</button>
+        </form>
+
+        <footer class="chat-footer">
+            <p><em>Conversations are logged for quality, tuning, and diagnostic purposes only.</em></p>
+        </footer>
+    </div>
+
+    <script src="/static/chat.js"></script>
+</body>
+</html>

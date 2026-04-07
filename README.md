@@ -40,6 +40,26 @@ PROJECT_MAP.md       → Detailed file-by-file guide
 pytest -v
 ```
 
+## Running the Web Server
+
+The chatbot is also available as a streaming web app. Same personality, same knowledge base, just in a browser instead of a terminal.
+
+Install dependencies (if you haven't already):
+
+```
+pip install -r requirements.txt
+```
+
+Start the server:
+
+```
+uvicorn web.app:app --reload
+```
+
+Open `http://localhost:8000` in your browser. The page is a dark chat interface that matches the ktulue.com aesthetic. Each browser tab is its own independent conversation. Refresh or close the tab to start a fresh session.
+
+Server logs (including a full conversation transcript at INFO level) are written to stdout in the terminal where you ran the `uvicorn` command. Errors are logged at ERROR level with full tracebacks.
+
 ---
 
 ## Support
